@@ -520,24 +520,33 @@ local function register_controller()
 end
 
 function controller_tl_on_pull(pos, side, player_name)
-	if not controller_allow_metadata_inventory_take then return false end
+	if not controller_allow_metadata_inventory_take then return nil end
 	local meta = core.get_meta(pos)
-	local drawer_net_index = index_drawers(pos)
-	meta:set_string("drawers_table_index", core.serialize(drawer_net_index))
-	local first = nil
-	for index,_ in pairs(drawer_net_index) do
-		if index ~= "empty" then
-			first = index
-			break
+	local drawer_list = index_drawers(pos)
+	meta:set_string("drawers_table_index", core.serialize(drawer_list))
+
+	-- lets grab a random drawer/slot so that a pusher doesn't get stuck on one full slot
+	local tlen = 0
+	for _,_ in pairs(drawer_list) do tlen = tlen + 1 end
+	if drawer_list["empty"] then tlen = tlen - 1 end
+
+	math.randomseed(os.time())
+	local loop = math.random(1, tlen)
+
+	for item,_ in pairs(drawer_list) do
+		if item ~= "empty" then
+			loop = loop - 1
+			if loop == 0 then
+				local stack = ItemStack(item)
+				stack:set_count(stack:get_stack_max())
+				local drawer_pos = drawer_list[item]["drawer_pos"]
+				local taken_stack = drawers.drawer_take_item(drawer_pos, stack)
+				if taken_stack then return taken_stack end
+				break
+			end
 		end
 	end
-	if first then
-		local stack = ItemStack(first)
-		stack:set_count(stack:get_stack_max())
-		local drawer_pos = drawer_net_index[first]["drawer_pos"]
-		local taken_stack = drawers.drawer_take_item(drawer_pos, stack)
-		if taken_stack then return taken_stack else return nil end
-	end
+
 	return nil
 end
 
