@@ -156,7 +156,7 @@ core.register_entity("drawers:visual", {
 		local player_name = clicker:get_player_name()
 		if core.is_protected(self.drawer_pos, player_name) then
 			core.record_protection_violation(self.drawer_pos, player_name)
-			return
+			ret
 		end
 
 		-- used to check if we need to play a sound in the end
@@ -229,11 +229,14 @@ core.register_entity("drawers:visual", {
 		if inv == nil then
 			return
 		end
+
 		local spaceChecker = ItemStack(self.itemName)
+		local is_creative = core.is_creative_enabled(puncher:get_player_name())
+
 		if add_stack then
 			spaceChecker:set_count(spaceChecker:get_stack_max())
 		end
-		if not inv:room_for_item("main", spaceChecker) then
+		if not inv:room_for_item("main", spaceChecker) and not is_creative then
 			return
 		end
 
@@ -246,7 +249,10 @@ core.register_entity("drawers:visual", {
 
 		if stack ~= nil then
 			-- add removed stack to player's inventory
-			inv:add_item("main", stack)
+			-- if player has creative and already has item then don't add it
+			if not is_creative or not inv:contains_item("main", stack) then
+				inv:add_item("main", stack)
+			end
 
 			-- play the interact sound
 			self:play_interact_sound()

@@ -29,6 +29,9 @@ SOFTWARE.
 local MP = core.get_modpath(core.get_current_modname())
 local S, NS = dofile(MP.."/intllib.lua")
 
+local has_mesecons_mvps = core.get_modpath("mesecons_mvps")
+local screwdriver = core.get_modpath("screwdriver") and screwdriver
+
 drawers.node_box_simple = {
 	{-0.5, -0.5, -0.4375, 0.5, 0.5, 0.5},
 	{-0.5, -0.5, -0.5, -0.4375, 0.5, -0.4375},
@@ -299,11 +302,11 @@ function drawers.register_drawer(name, def)
 	def.on_metadata_inventory_put = drawers.add_drawer_upgrade
 	def.on_metadata_inventory_take = drawers.remove_drawer_upgrade
 
-	if core.get_modpath("screwdriver") and screwdriver then
+	if screwdriver_loaded then
 		def.on_rotate = def.on_rotate or screwdriver.disallow
 	end
 
-	if core.get_modpath("pipeworks") and pipeworks then
+	if pipeworks_loaded then
 		def.groups.tubedevice = 1
 		def.groups.tubedevice_receiver = 1
 		def.tube = def.tube or {}
@@ -318,88 +321,126 @@ function drawers.register_drawer(name, def)
 		def.after_dig_node = pipeworks.after_dig
 	end
 
-	local has_mesecons_mvps = core.get_modpath("mesecons_mvps")
+	local tprop = {}
+	local i = 0
 
 	if drawers.enable_1x1 then
-		-- normal drawer 1x1 = 1
-		local def1 = table.copy(def)
-		def1.description = S("@1 Drawer", def.description)
-		def1.tiles = def.tiles or def.tiles1
-		def1.tiles1 = nil
-		def1.tiles2 = nil
-		def1.tiles4 = nil
-		def1.groups.drawer = 1
-		core.register_node(name .. "1", def1)
-		core.register_alias(name, name .. "1") -- 1x1 drawer is the default one
-		if has_mesecons_mvps then
-			-- don't let drawers be moved by pistons, visual glitches and
-			-- possible duplication bugs occur otherwise
-			mesecon.register_mvps_stopper(name .. "1")
-		end
+		i = i + 1
+		tprop[i] = {
+			dtype = 1,
+			descrip = "",
+			out = "1",
+			recipe = {
+				{def.material, def.material, def.material},
+				{    "", drawers.CHEST_ITEMSTRING,  ""   },
+				{def.material, def.material, def.material}
+			},
+			alias = true
+		}
 	end
 
 	if drawers.enable_1x2 then
-		-- 1x2 = 2
-		local def2 = table.copy(def)
-		def2.description = S("@1 Drawers (1x2)", def.description)
-		def2.tiles = def.tiles2
-		def2.tiles1 = nil
-		def2.tiles2 = nil
-		def2.tiles4 = nil
-		def2.groups.drawer = 2
-		core.register_node(name .. "2", def2)
-		if has_mesecons_mvps then
-			mesecon.register_mvps_stopper(name .. "2")
-		end
+		i = i + 1
+		tprop[i] = {
+			dtype = 2,
+			descrip = "s (1x2)",
+			out = "2 2",
+			recipe = {
+				{def.material, drawers.CHEST_ITEMSTRING, def.material},
+				{def.material,       def.material,       def.material},
+				{def.material, drawers.CHEST_ITEMSTRING, def.material}
+			}
+		}
 	end
 
 	if drawers.enable_2x2 then
-		-- 2x2 = 4
-		local def4 = table.copy(def)
-		def4.description = S("@1 Drawers (2x2)", def.description)
-		def4.tiles = def.tiles4
-		def4.tiles1 = nil
-		def4.tiles2 = nil
-		def4.tiles4 = nil
-		def4.groups.drawer = 4
-		core.register_node(name .. "4", def4)
-		if has_mesecons_mvps then
-			mesecon.register_mvps_stopper(name .. "4")
-		end
+		i = i + 1
+		tprop[i] = {
+			dtype = 4,
+			descrip = "s (2x2)",
+			out = "4 4",
+			recipe = {
+				{drawers.CHEST_ITEMSTRING, def.material, drawers.CHEST_ITEMSTRING},
+				{      def.material,       def.material,       def.material      },
+				{drawers.CHEST_ITEMSTRING, def.material, drawers.CHEST_ITEMSTRING}
+			}
+		}
 	end
 
-	if (not def.no_craft) and def.material then
-		if drawers.enable_1x1 then
+	for _,v in ipairs(tprop) do
+		local tdef = table.copy(def)
+		tdef.description = S("@1 Drawer" .. v.descrip, def.description)
+		if def.tilestring then
+			tdef.tiles = drawers.node_tiles_front_other(
+				"drawers_" .. def.tilestring .. "_front_" .. v.dtype .. ".png",
+				"drawers_" .. def.tilestring .. ".png"
+			)
+		end
+		tdef.groups.drawer = v.dtype
+		core.register_node(name .. v.dtype, tdef)
+		if v.alias then core.register_alias(name, name .. v.dtype) end
+		if has_mesecons_mvps then
+			mesecon.register_mvps_stopper(name .. v.dtype)
+		end
+		if (not def.no_craft) and def.material then
 			core.register_craft({
-				output = name .. "1",
-				recipe = {
-					{def.material, def.material, def.material},
-					{    "", drawers.CHEST_ITEMSTRING,  ""   },
-					{def.material, def.material, def.material}
-				}
+				output = name .. v.out,
+				recipe = v.recipe
 			})
 		end
-		if drawers.enable_1x2 then
-			core.register_craft({
-				output = name .. "2 2",
-				recipe = {
-					{def.material, drawers.CHEST_ITEMSTRING, def.material},
-					{def.material,       def.material,       def.material},
-					{def.material, drawers.CHEST_ITEMSTRING, def.material}
-				}
-			})
-		end
-		if drawers.enable_2x2 then
-			core.register_craft({
-				output = name .. "4 4",
-				recipe = {
-					{drawers.CHEST_ITEMSTRING, def.material, drawers.CHEST_ITEMSTRING},
-					{      def.material,       def.material,       def.material      },
-					{drawers.CHEST_ITEMSTRING, def.material, drawers.CHEST_ITEMSTRING}
-				}
+		if tubelib_loaded then
+			tubelib.register_node(name .. v.dtype, {}, {
+				on_push_item = tl_on_push,
+				on_unpull_item = tl_on_push,
+				on_pull_item = tl_on_pull
 			})
 		end
 	end
+end
+
+function tl_on_pull(pos, side, player_name)
+	if core.is_protected(pos,player_name) then
+	   core.record_protection_violation(pos,player_name)
+	   return ItemStack("")
+	end
+
+	local drawer_visuals = drawers.drawer_visuals[core.hash_node_position(pos)]
+	if not drawer_visuals then
+		return ItemStack("")
+	end
+
+	local vcount = 0
+	for _, visual in pairs(drawer_visuals) do vcount = vcount + 1 end
+
+	if vcount > 1 then
+		math.randomseed(os.time())
+		vcount = math.random(1, vcount)
+	end
+
+	for _, visual in pairs(drawer_visuals) do
+		vcount = vcount - 1
+		if vcount == 0 then
+			return visual.take_stack()
+		end
+	end
+	return ItemStack("")
+end
+
+function tl_on_push(pos, side, item, player_name)
+	if core.is_protected(pos,player_name) then
+	   core.record_protection_violation(pos,player_name)
+	   return false
+	end
+	local leftover = drawer_insert_object_from_tube(pos, nil, item, nil)
+	if leftover:get_count() then
+		if item:get_count() > leftover:get_count() then
+			return true, leftover
+		else
+			-- leftover is the full amount so we didn't actually insert anything
+			return false
+		end
+	end
+	return true
 end
 
 function drawers.register_drawer_upgrade(name, def)
@@ -424,4 +465,3 @@ function drawers.register_drawer_upgrade(name, def)
 		})
 	end
 end
-

@@ -45,8 +45,6 @@ local S, NS = dofile(MP.."/intllib.lua")
 
 local default_loaded = core.get_modpath("default") and default
 local mcl_loaded = core.get_modpath("mcl_core") and mcl_core
-local pipeworks_loaded = core.get_modpath("pipeworks") and pipeworks
-local tubelib_loaded = core.get_modpath("tubelib")
 local digilines_loaded = core.get_modpath("digilines") and digilines
 
 local function controller_formspec(pos)
@@ -553,13 +551,19 @@ end
 function controller_tl_on_push(pos, side, item, player_name)
 	local player = core.get_player_by_name(player_name)
 	local meta = core.get_meta(pos)
+	local inv = meta:get_inventory()
 	local num_allowed = controller_allow_metadata_inventory_put(pos, "src", nil, item, player)
 
 	if num_allowed <= 0 then return false end
-	item:set_count(num_allowed)
-	if not tubelib.put_item(meta, "src", item) then return false end
-	controller_on_metadata_inventory_put(pos, "src", nil, item, player)
-	return true
+	local leftover
+
+	if tubelib.put_item(meta, "src", item) then
+		item:set_count(num_allowed)
+		controller_on_metadata_inventory_put(pos, "src", nil, item, player)
+		leftover = inv:get_stack("src", 1)
+	end
+	inv:set_stack("src", 1, ItemStack(""))
+	return result, leftover
 end
 
 -- register drawer controller
