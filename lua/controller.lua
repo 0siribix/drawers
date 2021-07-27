@@ -518,11 +518,15 @@ local function register_controller()
 end
 
 function controller_tl_on_pull(pos, side, player_name)
-	if not controller_allow_metadata_inventory_take then return nil end
+	if core.is_protected(pos, player_name) then
+	   core.record_protection_violation(pos,player_name)
+	   return false
+	end
+
 	local meta = core.get_meta(pos)
 	local drawer_list = index_drawers(pos)
 	meta:set_string("drawers_table_index", core.serialize(drawer_list))
-
+core.log("Warning", "666_529: " .. core.serialize(drawer_list))
 	-- lets grab a random drawer/slot so that a pusher doesn't get stuck on one full slot
 	local tlen = 0
 	for _,_ in pairs(drawer_list) do tlen = tlen + 1 end
@@ -540,6 +544,7 @@ function controller_tl_on_pull(pos, side, player_name)
 				local drawer_pos = drawer_list[item]["drawer_pos"]
 				local taken_stack = drawers.drawer_take_item(drawer_pos, stack)
 				if taken_stack then return taken_stack end
+core.log("Warning", "666_529: " .. core.serialize(drawer_list))
 				break
 			end
 		end
@@ -551,19 +556,18 @@ end
 function controller_tl_on_push(pos, side, item, player_name)
 	local player = core.get_player_by_name(player_name)
 	local meta = core.get_meta(pos)
-	local inv = meta:get_inventory()
-	local num_allowed = controller_allow_metadata_inventory_put(pos, "src", nil, item, player)
 
-	if num_allowed <= 0 then return false end
-	local leftover
-
-	if tubelib.put_item(meta, "src", item) then
-		item:set_count(num_allowed)
-		controller_on_metadata_inventory_put(pos, "src", nil, item, player)
-		leftover = inv:get_stack("src", 1)
+	if core.is_protected(pos, player_name) then
+	   core.record_protection_violation(pos,player_name)
+	   return false
 	end
-	inv:set_stack("src", 1, ItemStack(""))
-	return result, leftover
+
+	local leftover = controller_insert_to_drawers(pos, item)
+	
+	if leftover:get_count() == item:get_count() then return false end
+	
+	item:set_count(item:get_count() - num_allowed)
+	return true, 
 end
 
 -- register drawer controller

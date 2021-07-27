@@ -156,7 +156,7 @@ core.register_entity("drawers:visual", {
 		local player_name = clicker:get_player_name()
 		if core.is_protected(self.drawer_pos, player_name) then
 			core.record_protection_violation(self.drawer_pos, player_name)
-			ret
+			return false
 		end
 
 		-- used to check if we need to play a sound in the end

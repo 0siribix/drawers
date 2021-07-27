@@ -410,17 +410,17 @@ function tl_on_pull(pos, side, player_name)
 	end
 
 	local vcount = 0
-	for _, visual in pairs(drawer_visuals) do vcount = vcount + 1 end
+	for _, v in pairs(drawer_visuals) do vcount = vcount + 1 end
 
 	if vcount > 1 then
 		math.randomseed(os.time())
 		vcount = math.random(1, vcount)
 	end
 
-	for _, visual in pairs(drawer_visuals) do
+	for _, v in pairs(drawer_visuals) do
 		vcount = vcount - 1
 		if vcount == 0 then
-			return visual.take_stack()
+			return v.take_stack()
 		end
 	end
 	return ItemStack("")
