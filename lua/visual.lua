@@ -285,6 +285,7 @@ core.register_entity("drawers:visual", {
 	end,
 
 	take_stack = function(self)
+		if not self then return end
 		return self:take_items(ItemStack(self.itemName):get_stack_max())
 	end,
 

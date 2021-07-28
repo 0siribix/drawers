@@ -370,6 +370,17 @@ function drawers.register_drawer(name, def)
 	for _,v in ipairs(tprop) do
 		local tdef = table.copy(def)
 		tdef.description = S("@1 Drawer" .. v.descrip, def.description)
+		if tubelib_loaded then
+			tubelib.register_node(name .. v.dtype, {}, {
+				on_push_item = tl_on_push,
+				on_unpull_item = tl_on_push,
+				on_pull_item = tl_on_pull
+			})
+			def.after_place_node = function(pos, placer)
+				tubelib.add_node(pos, name .. v.dtype)
+			end
+			def.after_dig_node = tubelib.remove_node
+		end
 		if def.tilestring then
 			tdef.tiles = drawers.node_tiles_front_other(
 				"drawers_" .. def.tilestring .. "_front_" .. v.dtype .. ".png",
@@ -388,39 +399,40 @@ function drawers.register_drawer(name, def)
 				recipe = v.recipe
 			})
 		end
-		if tubelib_loaded then
-			tubelib.register_node(name .. v.dtype, {}, {
-				on_push_item = tl_on_push,
-				on_unpull_item = tl_on_push,
-				on_pull_item = tl_on_pull
-			})
-		end
 	end
 end
 
 function tl_on_pull(pos, side, player_name)
+
 	if core.is_protected(pos,player_name) then
 	   core.record_protection_violation(pos,player_name)
 	   return ItemStack("")
 	end
-
 	local drawer_visuals = drawers.drawer_visuals[core.hash_node_position(pos)]
+
 	if not drawer_visuals then
 		return ItemStack("")
 	end
 
 	local vcount = 0
-	for _, v in pairs(drawer_visuals) do vcount = vcount + 1 end
+	for _, v in pairs(drawer_visuals) do
+		if v then
+			if v.itemName ~= "" then
+				vcount = vcount + 1
+			end
+		end
+	end
+	if vcount == 0 then return ItemStack("") end
 
 	if vcount > 1 then
 		math.randomseed(os.time())
 		vcount = math.random(1, vcount)
 	end
 
-	for _, v in pairs(drawer_visuals) do
-		vcount = vcount - 1
+	for _, vis in pairs(drawer_visuals) do
+		if vis and vis.itemName ~= "" then vcount = vcount - 1 end
 		if vcount == 0 then
-			return v.take_stack()
+			return vis.take_stack(vis)
 		end
 	end
 	return ItemStack("")
@@ -431,16 +443,9 @@ function tl_on_push(pos, side, item, player_name)
 	   core.record_protection_violation(pos,player_name)
 	   return false
 	end
-	local leftover = drawer_insert_object_from_tube(pos, nil, item, nil)
-	if leftover:get_count() then
-		if item:get_count() > leftover:get_count() then
-			return true, leftover
-		else
-			-- leftover is the full amount so we didn't actually insert anything
-			return false
-		end
-	end
-	return true
+	local leftover = drawers.drawer_insert_object_from_tube(pos, nil, item, nil)
+	if leftover:get_count() == item:get_count() then return false end
+	return true, leftover
 end
 
 function drawers.register_drawer_upgrade(name, def)
