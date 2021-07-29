@@ -30,9 +30,17 @@ local S, NS = dofile(MP.."/intllib.lua")
 
 -- these are used for multiple other loaded lua files
 pipeworks_loaded = core.get_modpath("pipeworks") and pipeworks
-tubelib_loaded = core.get_modpath("tubelib") and tubelib
+tubelib_loaded = nil
 default_loaded = core.get_modpath("default") and default
 mcl_loaded = core.get_modpath("mcl_core") and mcl_core
+
+if core.get_modpath("tubelib") then
+	if tubelib.version >= 2.1 then
+		tubelib_loaded = true
+	else
+		core.log("Warning", "Tubelib version must be at least v2.1 to work with drawers")
+	end
+end
 
 drawers = {}
 drawers.drawer_visuals = {}
@@ -100,6 +108,7 @@ if mcl_loaded then
 			groups = {handy = 1, axey = 1, flammable = 3, wood = 1, building_block = 1, material_wood = 1},
 			sounds = drawers.WOOD_SOUNDS,
 			drawer_stack_max_factor = 36,
+			material = v[4],
 			_mcl_blast_resistance = 15,
 			_mcl_hardness = 2
 		})
@@ -111,7 +120,7 @@ if mcl_loaded then
 	core.register_alias("drawers:wood4", "drawers:oakwood4")
 
 	for _,v in ipairs({
-		-- { material, description, multiplier, ingredient }
+		-- { node suffix, description, multiplier, ingredient }
 		{"iron", "Iron Drawer Upgrade (x2)", 100, "iron_ingot"},
 		{"gold", "Gold Drawer Upgrade (x3)", 200, "gold_ingot"},
 		{"obsidian","Obsidian Drawer Upgrade (x4)",300, "obsidian"},
@@ -150,7 +159,7 @@ else
 				groups = {choppy = 3, oddly_breakable_by_hand = 2},
 				sounds = drawers.WOOD_SOUNDS,
 				drawer_stack_max_factor = 32,
-				material = "default:" .. v[2]
+				material = "default:" .. v[3]
 			})
 		end
 

@@ -550,21 +550,18 @@ end
 
 function controller_tl_on_push(pos, side, item, player_name)
 	local player = core.get_player_by_name(player_name)
-	local meta = core.get_meta(pos)
-	local inv = meta:get_inventory()
-	local num_allowed = controller_allow_metadata_inventory_put(pos, "src", nil, item, player)
+	local count = item:get_count()
+	local leftover = controller_insert_to_drawers(pos, item)
 
-	if num_allowed <= 0 then return false end
-
-	local leftover
-
-	if item:get_count() > num_allowed then
-		leftover = item:get_count() - num_allowed
-		item:set_count(num_allowed)
+	if leftover:get_count() then
+		if leftover:get_count() < count then
+			return true, leftover
+		else
+			return false
+		end
 	end
 
-	controller_on_metadata_inventory_put(pos, "src", nil, item, player)
-	return true, leftover
+	return true
 end
 
 -- register drawer controller
