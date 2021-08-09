@@ -39,16 +39,16 @@ function drawers.get_upgrade_slots_bg(x,y)
 end
 
 function drawers.gen_info_text(basename, count, factor, stack_max)
+	-- factor is max number of stacks
+	-- not currently using basename so this could possibly be removed?
 	local maxCount = stack_max * factor
 	local percent = count / maxCount * 100
 	-- round the number (float -> int)
 	percent = math.floor(percent + 0.5)
+	stack_count = math.floor((count * 100) / stack_max) / 100
 
-	if count == 0 then
-		return S("@1 (@2% full)", basename, tostring(percent))
-	else
-		return S("@1 @2 (@3% full)", tostring(count), basename, tostring(percent))
-	end
+	return S(basename) .. ": (" .. percent .. S("% full)\n") .. stack_count .. "/" ..
+		factor .. S("stacks   |   ") .. count .. "/" .. maxCount .. S(" items")
 end
 
 function drawers.get_inv_image(name)

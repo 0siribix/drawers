@@ -496,7 +496,12 @@ local function register_controller()
 		tubelib.register_node("drawers:controller", {}, {
 			on_push_item = controller_tl_on_push,
 			on_unpull_item = controller_tl_on_push,
-			on_pull_item = controller_tl_on_pull
+			on_pull_item = function(pos, side, player_name)
+				return controller_tl_on_pull(pos, player_name, false)
+			end,
+			on_pull_stack = function(pos, side, player_name)
+				return controller_tl_on_pull(pos, player_name, true)
+			end
 		})
 
 		def.after_place_node = function(pos, placer)
@@ -517,7 +522,7 @@ local function register_controller()
 	core.register_node("drawers:controller", def)
 end
 
-function controller_tl_on_pull(pos, side, player_name)
+function controller_tl_on_pull(pos, player_name, full_stack)
 	if not controller_allow_metadata_inventory_take then return nil end
 	local meta = core.get_meta(pos)
 	local drawer_list = index_drawers(pos)
@@ -536,7 +541,7 @@ function controller_tl_on_pull(pos, side, player_name)
 			loop = loop - 1
 			if loop == 0 then
 				local stack = ItemStack(item)
-				stack:set_count(stack:get_stack_max())
+				if full_stack then stack:set_count(stack:get_stack_max()) end
 				local drawer_pos = drawer_list[item]["drawer_pos"]
 				local taken_stack = drawers.drawer_take_item(drawer_pos, stack)
 				if taken_stack then return taken_stack end
@@ -553,12 +558,11 @@ function controller_tl_on_push(pos, side, item, player_name)
 	local count = item:get_count()
 	local leftover = controller_insert_to_drawers(pos, item)
 
-	if leftover:get_count() then
-		if leftover:get_count() < count then
-			return true, leftover
-		else
-			return false
+	if leftover:get_count() ~= 0 then
+		if leftover:get_count() ~= count then
+			item:set_count(leftover:get_count())
 		end
+		return false
 	end
 
 	return true

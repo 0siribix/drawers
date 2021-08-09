@@ -374,7 +374,12 @@ function drawers.register_drawer(name, def)
 			tubelib.register_node(name .. v.dtype, {}, {
 				on_push_item = tl_on_push,
 				on_unpull_item = tl_on_push,
-				on_pull_item = tl_on_pull
+				on_pull_item = function(pos, side, player_name)
+					return tl_on_pull(pos, player_name, false)
+				end,
+				on_pull_stack = function(pos, side, player_name)
+					return tl_on_pull(pos, player_name, true)
+				end
 			})
 			def.after_place_node = function(pos, placer)
 				tubelib.add_node(pos, name .. v.dtype)
@@ -402,7 +407,7 @@ function drawers.register_drawer(name, def)
 	end
 end
 
-function tl_on_pull(pos, side, player_name)
+function tl_on_pull(pos, player_name, full_stack)
 
 	if core.is_protected(pos,player_name) then
 	   core.record_protection_violation(pos,player_name)
@@ -432,7 +437,11 @@ function tl_on_pull(pos, side, player_name)
 	for _, vis in pairs(drawer_visuals) do
 		if vis and vis.itemName ~= "" then vcount = vcount - 1 end
 		if vcount == 0 then
-			return vis.take_stack(vis)
+			if full_stack then
+				return vis.take_stack(vis)
+			else
+				return vis.take_items(vis, 1)
+			end
 		end
 	end
 	return ItemStack("")
@@ -445,12 +454,11 @@ function tl_on_push(pos, side, item, player_name)
 	end
 	local count = item:get_count()
 	local leftover = drawers.drawer_insert_object_from_tube(pos, nil, item, nil)
-	if leftover:get_count() then
-		if leftover:get_count() < count then
-			return true, leftover
-		else
-			return false
+	if leftover:get_count() ~= 0 then
+		if leftover:get_count() ~= count then
+			item:set_count(leftover:get_count())
 		end
+		return false
 	end
 	return true
 end
