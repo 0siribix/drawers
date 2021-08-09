@@ -30,17 +30,9 @@ local S, NS = dofile(MP.."/intllib.lua")
 
 -- these are used for multiple other loaded lua files
 pipeworks_loaded = core.get_modpath("pipeworks") and pipeworks
-tubelib_loaded = nil
+tubelib_loaded = core.get_modpath("tubelib_tweaks") and tubelib
 default_loaded = core.get_modpath("default") and default
 mcl_loaded = core.get_modpath("mcl_core") and mcl_core
-
-if core.get_modpath("tubelib") then
-	if tubelib.version >= 2.1 then
-		tubelib_loaded = true
-	else
-		core.log("Warning", "Tubelib version must be at least v2.1 to work with drawers")
-	end
-end
 
 drawers = {}
 drawers.drawer_visuals = {}
