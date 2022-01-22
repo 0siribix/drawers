@@ -64,7 +64,7 @@ function drawers.get_inv_image(name)
 
 		for k,v in pairs(tiles) do
 			if type(v) == "table" then
-				tiles[k] = v.name
+				tiles[k] = v.name or v.image or texture
 			end
 		end
 
