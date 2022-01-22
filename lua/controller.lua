@@ -555,17 +555,10 @@ end
 
 function controller_tl_on_push(pos, side, item, player_name)
 	local player = core.get_player_by_name(player_name)
-	local count = item:get_count()
 	local leftover = controller_insert_to_drawers(pos, item)
 
-	if leftover:get_count() ~= 0 then
-		if leftover:get_count() ~= count then
-			item:set_count(leftover:get_count())
-		end
-		return false
-	end
-
-	return true
+	item:set_count(leftover:get_count())
+	return (item:get_count() == 0)
 end
 
 -- register drawer controller

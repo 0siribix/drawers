@@ -452,15 +452,9 @@ function tl_on_push(pos, side, item, player_name)
 	   core.record_protection_violation(pos,player_name)
 	   return false
 	end
-	local count = item:get_count()
 	local leftover = drawers.drawer_insert_object_from_tube(pos, nil, item, nil)
-	if leftover:get_count() ~= 0 then
-		if leftover:get_count() ~= count then
-			item:set_count(leftover:get_count())
-		end
-		return false
-	end
-	return true
+	item:set_count(leftover:get_count())
+	return (item:get_count() == 0)
 end
 
 function drawers.register_drawer_upgrade(name, def)
