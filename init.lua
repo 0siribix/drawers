@@ -30,7 +30,7 @@ local S, NS = dofile(MP.."/intllib.lua")
 
 -- these are used for multiple other loaded lua files
 pipeworks_loaded = core.get_modpath("pipeworks") and pipeworks
-tubelib_loaded = core.get_modpath("tubelib_tweaks") and tubelib
+tubelib_loaded = core.get_modpath("tubelib") and tubelib and tubelib.refill
 default_loaded = core.get_modpath("default") and default
 mcl_loaded = core.get_modpath("mcl_core") and mcl_core
 
