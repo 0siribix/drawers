@@ -285,7 +285,7 @@ local function controller_insert_to_drawers(pos, stack)
 		-- If the drawer is still empty and the drawer entity is loaded, we will
 		-- put the items in the drawer
 		if content.name == "" and drawers.drawer_visuals[core.hash_node_position(drawer_pos)] then
-			local leftover = drawers.drawer_insert_object(drawer_pos, stack, visualid)
+			drawers.drawer_insert_object(drawer_pos, stack, visualid)
 
 			-- Add the item to the drawers table index and set the empty one to nil
 			drawer_net_index["empty"] = nil
@@ -293,8 +293,6 @@ local function controller_insert_to_drawers(pos, stack)
 
 			-- Set the controller metadata
 			meta:set_string("drawers_table_index", core.serialize(drawer_net_index))
-
-			return leftover
 		end
 	end
 
@@ -554,10 +552,12 @@ function controller_tl_on_pull(pos, player_name, full_stack)
 end
 
 function controller_tl_on_push(pos, side, item, player_name)
-	local player = core.get_player_by_name(player_name)
-	local leftover = controller_insert_to_drawers(pos, item)
+	if core.is_protected(pos,player_name) then
+	   core.record_protection_violation(pos,player_name)
+	   return false
+	end
+	controller_insert_to_drawers(pos, item)
 
-	item:set_count(leftover:get_count())
 	return (item:get_count() == 0)
 end
 

@@ -202,20 +202,19 @@ function drawers.drawer_insert_object_from_tube(pos, node, stack, direction)
     end
 
 	-- first try to insert in the correct slot (if there are already items)
-	local leftover = stack
 	for _, visual in pairs(drawer_visuals) do
 		if visual.itemName == stack:get_name() then
-			leftover = visual:try_insert_stack(leftover, true)
+			visual:try_insert_stack(stack, true)
 		end
 	end
 
 	-- if there's still something left, also use other slots
-	if leftover:get_count() > 0 then
+	if stack:get_count() > 0 then
 		for _, visual in pairs(drawer_visuals) do
-			leftover = visual:try_insert_stack(leftover, true)
+			visual:try_insert_stack(stack, true)
 		end
 	end
-	return leftover
+	return stack
 end
 
 --[[
@@ -452,8 +451,8 @@ function tl_on_push(pos, side, item, player_name)
 	   core.record_protection_violation(pos,player_name)
 	   return false
 	end
-	local leftover = drawers.drawer_insert_object_from_tube(pos, nil, item, nil)
-	item:set_count(leftover:get_count())
+	drawers.drawer_insert_object_from_tube(pos, nil, item, nil)
+--	item:set_count(leftover:get_count())
 	return (item:get_count() == 0)
 end
 
