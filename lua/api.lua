@@ -329,13 +329,21 @@ function drawers.register_drawer(name, def)
 			dtype = 1,
 			descrip = "",
 			out = "1",
-			recipe = {
+			alias = true
+		}
+		if def.is_tree then
+			tprop[i].recipe = {{"", def.material, ""},
+							{"", drawers.CHEST_ITEMSTRING, ""},
+							{"","",""}}
+
+		else
+			tprop[i].recipe = {
 				{def.material, def.material, def.material},
 				{    "", drawers.CHEST_ITEMSTRING,  ""   },
 				{def.material, def.material, def.material}
-			},
-			alias = true
-		}
+			}
+
+		end
 	end
 
 	if drawers.enable_1x2 then
@@ -344,12 +352,18 @@ function drawers.register_drawer(name, def)
 			dtype = 2,
 			descrip = "s (1x2)",
 			out = "2 2",
-			recipe = {
+		}
+		if def.is_tree then
+			tprop[i].recipe = {{"", drawers.CHEST_ITEMSTRING, ""},
+							{"", def.material, ""},
+							{"", drawers.CHEST_ITEMSTRING, ""}}
+		else
+			tprop[i].recipe = {
 				{def.material, drawers.CHEST_ITEMSTRING, def.material},
 				{def.material,       def.material,       def.material},
 				{def.material, drawers.CHEST_ITEMSTRING, def.material}
 			}
-		}
+		end
 	end
 
 	if drawers.enable_2x2 then
@@ -358,12 +372,18 @@ function drawers.register_drawer(name, def)
 			dtype = 4,
 			descrip = "s (2x2)",
 			out = "4 4",
-			recipe = {
+		}
+		if def.is_tree then
+			tprop[i].recipe = {{drawers.CHEST_ITEMSTRING, "", drawers.CHEST_ITEMSTRING},
+							{"", def.material, ""},
+							{drawers.CHEST_ITEMSTRING, "", drawers.CHEST_ITEMSTRING}}
+		else
+			tprop[i].recipe = {
 				{drawers.CHEST_ITEMSTRING, def.material, drawers.CHEST_ITEMSTRING},
 				{      def.material,       def.material,       def.material      },
 				{drawers.CHEST_ITEMSTRING, def.material, drawers.CHEST_ITEMSTRING}
 			}
-		}
+		end
 	end
 
 	for _,v in ipairs(tprop) do
@@ -391,6 +411,7 @@ function drawers.register_drawer(name, def)
 				"drawers_" .. def.tilestring .. ".png"
 			)
 		end
+		if def.is_tree then tdef.tiles[6] = tdef.tiles[6] .. "^tree" .. v.dtype .. ".png" end
 		tdef.groups.drawer = v.dtype
 		core.register_node(name .. v.dtype, tdef)
 		if v.alias then core.register_alias(name, name .. v.dtype) end

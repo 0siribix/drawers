@@ -38,6 +38,9 @@ drawers = {}
 drawers.drawer_visuals = {}
 
 drawers.WOOD_ITEMSTRING = "group:wood"
+drawers.FACTOR = 32
+tree_trunks = true
+
 if default_loaded then
 	drawers.WOOD_SOUNDS = default.node_sound_wood_defaults()
 	drawers.CHEST_ITEMSTRING = "default:chest"
@@ -46,6 +49,7 @@ elseif mcl_loaded then -- MineClone 2
 	if core.get_modpath("mcl_sounds") and mcl_sounds then
 		drawers.WOOD_SOUNDS = mcl_sounds.node_sound_wood_defaults()
 	end
+	drawers.FACTOR = 36
 else
 	drawers.CHEST_ITEMSTRING = "chest"
 end
@@ -99,7 +103,7 @@ if mcl_loaded then
 			tilestring = v[3],
 			groups = {handy = 1, axey = 1, flammable = 3, wood = 1, building_block = 1, material_wood = 1},
 			sounds = drawers.WOOD_SOUNDS,
-			drawer_stack_max_factor = 36,
+			drawer_stack_max_factor = drawers.FACTOR,
 			material = v[4],
 			_mcl_blast_resistance = 15,
 			_mcl_hardness = 2
@@ -150,7 +154,7 @@ else
 				tilestring = v[3],
 				groups = {choppy = 3, oddly_breakable_by_hand = 2},
 				sounds = drawers.WOOD_SOUNDS,
-				drawer_stack_max_factor = 32,
+				drawer_stack_max_factor = drawers.FACTOR,
 				material = "default:" .. v[3]
 			})
 		end
@@ -182,9 +186,52 @@ else
 		tilestring = "wood",
 		groups = {choppy = 3, oddly_breakable_by_hand = 2},
 		sounds = drawers.WOOD_SOUNDS,
-		drawer_stack_max_factor = 32, -- 4 * 8 normal chest size
+		drawer_stack_max_factor = drawers.FACTOR, -- 4 * 8 normal chest size
 		material = drawers.WOOD_ITEMSTRING
 	})
+end
+
+if tree_trunks then
+	for name,node in pairs(minetest.registered_nodes) do
+		local mod, dname = string.match(name, "(.*):(.*)")
+		local valid_mods = {
+			default = true,
+			ethereal = true,
+			moretrees = true,
+			baldcypress = true,
+			cherrytree = true,
+			chestnuttree = true,
+			clementinetree = true,
+			ebony = true,
+			hollytree = true,
+			jacaranda = true,
+			larch = true,
+			mahogany = true,
+			maple = true,
+			oak = true,
+			pineapple = true,
+			plumtree = true,
+			pomegranate = true,
+			sequoia = true
+			}
+		if valid_mods[node.mod_origin] and node.groups.tree then
+			local tiles = node.tiles
+			if type(tiles) == "table" then
+				if tiles[3] ~= nil and tiles[3] ~= tiles[1] then
+					tiles = {tiles[3], tiles[3], tiles[3].."^[transform1", tiles[3].."^[transform1", tiles[3], tiles[1]}
+				end
+			end
+			drawers.register_drawer("drawers:" .. dname, {
+				description = S((dname:gsub("%a", string.upper, 1))),
+				tiles = tiles,
+				groups = {choppy = 3, oddly_breakable_by_hand = 2},
+				sound = drawers.WOOD_SOUNDS,
+				drawer_stack_max_factor = drawers.FACTOR,
+				material = name,
+				is_tree = true
+			})
+		end
+	end
 end
 
 if core.get_modpath("moreores") then
