@@ -195,24 +195,24 @@ if tree_trunks then
 	for name,node in pairs(minetest.registered_nodes) do
 		local mod, dname = string.match(name, "(.*):(.*)")
 		local valid_mods = {
-			default = true,
-			ethereal = true,
-			moretrees = true,
-			baldcypress = true,
-			cherrytree = true,
-			chestnuttree = true,
-			clementinetree = true,
-			ebony = true,
-			hollytree = true,
-			jacaranda = true,
-			larch = true,
-			mahogany = true,
-			maple = true,
-			oak = true,
-			pineapple = true,
-			plumtree = true,
-			pomegranate = true,
-			sequoia = true
+			default = 1,
+			ethereal = 1,
+			moretrees = 1,
+			baldcypress = 2,
+			cherrytree = 2,
+			chestnuttree = 2,
+			clementinetree = 2,
+			ebony = 2,
+			hollytree = 2,
+			jacaranda = 2,
+			larch = 2,
+			mahogany = 2,
+			maple = 2,
+			oak = 2,
+			pineapple = 2,
+			plumtree = 2,
+			pomegranate = 2,
+			sequoia = 2
 			}
 		if valid_mods[node.mod_origin] and node.groups.tree then
 			local tiles = node.tiles
@@ -221,6 +221,7 @@ if tree_trunks then
 					tiles = {tiles[3], tiles[3], tiles[3].."^[transform1", tiles[3].."^[transform1", tiles[3], tiles[1]}
 				end
 			end
+			if valid_mods[mod] == 2 then dname = mod end
 			drawers.register_drawer("drawers:" .. dname, {
 				description = S((dname:gsub("%a", string.upper, 1))),
 				tiles = tiles,
